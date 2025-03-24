@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Configuración básica de la máquina virtual
+VM_NAME="ecommerce-vm"
+OS_TYPE="Ubuntu_64"
+MEMORY_SIZE="4096" # 4GB de RAM
+CPU_CORES="2"
+DISK1_SIZE="1024" # 1TB
+DISK2_SIZE="1024" # 1TB
+NETWORK_ADAPTER="nat" # Configuración de red para acceso a Internet
+
+# Crear la máquina virtual
+echo "Creando la máquina virtual..."
+VBoxManage createvm --name $VM_NAME --ostype $OS_TYPE --register
+
+# Configurar memoria y CPU
+echo "Configurando memoria y CPU..."
+VBoxManage modifyvm $VM_NAME --memory $MEMORY_SIZE --cpus $CPU_CORES
+
+# Configurar el adaptador de red
+echo "Configurando el adaptador de red..."
+VBoxManage modifyvm $VM_NAME --nic1 $NETWORK_ADAPTER
+
+# Crear y asignar los discos duros
+echo "Creando y asignando los discos duros..."
+VBoxManage createmedium disk --filename "$VM_NAME-disk1.vdi" --size $(($DISK1_SIZE * 1024)) # Convertir a MB
+VBoxManage createmedium disk --filename "$VM_NAME-disk2.vdi" --size $(($DISK2_SIZE * 1024)) # Convertir a MB
+VBoxManage storagectl $VM_NAME --name "SATA Controller" --add sata --controller IntelAhci
+VBoxManage storageattach $VM_NAME --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium "$VM_NAME-disk1.vdi"
+VBoxManage storageattach $VM_NAME --storagectl "SATA Controller" --port 1 --device 0 --type hdd --medium "$VM_NAME-disk2.vdi"
+
+# Asignar la imagen de Ubuntu Server
+echo "Asignando la imagen de Ubuntu Server..."
+VBoxManage storagectl $VM_NAME --name "IDE Controller" --add ide
+VBoxManage storageattach $VM_NAME --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium /ruta/a/tu/imagen.iso
+
+# Iniciar la máquina virtual
+echo "Iniciando la máquina virtual..."
+VBoxManage startvm $VM_NAME --type headless
+
+echo "Máquina virtual creada y configurada. Accede a la consola para completar la instalación de Ubuntu Server."
